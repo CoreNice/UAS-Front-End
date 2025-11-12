@@ -1,7 +1,10 @@
 import { NavLink } from "@/components/NavLink";
 import { Mail, Instagram } from "lucide-react";
 
-const Navigation = () => {
+type UserMini = { name: string; avatarUrl?: string | null };
+type Props = { user?: UserMini | null };
+
+const Navigation = ({ user = null }: Props) => {
   const navItems = [
     { name: "HOME", path: "/" },
     { name: "PROFIL", path: "/profile" },
@@ -26,24 +29,47 @@ const Navigation = () => {
               </NavLink>
             ))}
           </div>
-          
+
           <div className="flex items-center space-x-4">
+            {user ? (
+              <NavLink
+                to="/profileuser"
+                className="flex items-center gap-2 text-primary-foreground/90 hover:text-primary-foreground font-semibold"
+                activeClassName="text-primary-foreground"
+              >
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} className="h-6 w-6 rounded-full object-cover" />
+                ) : (
+                  <span className="h-6 w-6 rounded-full bg-white/50 inline-block" />
+                )}
+                {user.name}
+              </NavLink>
+            ) : (
+              <NavLink
+                to="/login"
+                className="text-primary-foreground/80 hover:text-primary-foreground underline underline-offset-4 tracking-wide text-sm font-semibold"
+                activeClassName="text-primary-foreground"
+              >
+                Login
+              </NavLink>
+            )}
+
             <a
-              href="mailto:contact@pout.untar.ac.id"
+              href="mailto:oikoumene.ut@gmail.com"
               className="text-primary-foreground/80 hover:text-primary-foreground transition-colors"
-              aria-label="Email"
             >
               <Mail className="h-5 w-5" />
             </a>
+
             <a
-              href="https://instagram.com/pout.untar"
+              href="https://instagram.com/po_untar"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary-foreground/80 hover:text-primary-foreground transition-colors"
-              aria-label="Instagram"
             >
               <Instagram className="h-5 w-5" />
             </a>
+
             <div className="text-primary-foreground font-bold text-lg">POUT</div>
           </div>
         </div>
