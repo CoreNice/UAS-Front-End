@@ -9,7 +9,6 @@ const Home = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with Image */}
       <section className="relative pt-32 pb-20 px-4 overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
@@ -51,7 +50,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Welcome Section with Pattern */}
       <section className="py-24 px-4 bg-background relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/10 to-transparent"></div>
         <div className="container mx-auto relative z-10">
@@ -78,7 +76,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Values Section with Animated Cards */}
       <section className="py-24 px-4 bg-gradient-to-b from-muted/30 to-background relative">
         <div className="container mx-auto">
           <div className="text-center mb-16">
@@ -115,7 +112,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-20 px-4 bg-gradient-hero relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 left-10 w-72 h-72 bg-primary-foreground rounded-full blur-3xl animate-pulse-slow"></div>
