@@ -21,13 +21,12 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminProductsCMS from "./pages/AdminProductsCMS";
 import AdminActivityCMS from "./pages/AdminActivityCMS";
 import AdminProfileCMS from "./pages/AdminProfileCMS";
+
 const queryClient = new QueryClient();
 
-// Protected Route component for admin pages
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
 
-  // If still initial loading, show loading spinner
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -39,19 +38,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // If not authenticated, redirect to login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // If not admin, show access denied
   if (user.role !== 'admin') {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-red-600 mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-4">You do not have permission to access this page.</p>
-          <a href="/" className="text-blue-600 hover:underline">Go to Home</a>
+          <h1 className="text-4xl font-bold text-red-600 mb-4">LOST</h1>
+          <p className="text-gray-600 mb-4">Only admin can access this page.</p>
+          <a href="/" className="text-blue-600 hover:underline">Back to Home</a>
         </div>
       </div>
     );
