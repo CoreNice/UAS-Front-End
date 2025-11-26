@@ -1,7 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuthHook";
 
 type ProductItem = {
   name: string;
@@ -28,7 +31,7 @@ const currency = (n: number) =>
 const Checkout = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const { user, token } = useAuth();
   const cart: CartLine[] = (state as LocationState)?.cart || [];
 
   const [nama, setNama] = useState("");
@@ -37,6 +40,21 @@ const Checkout = () => {
   const [catatan, setCatatan] = useState("");
   const [metode, setMetode] = useState<"pickup" | "delivery">("pickup");
   const [alamat, setAlamat] = useState("");
+  const [validationError, setValidationError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setNama(user.name || "");
+      setEmail(user.email || "");
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
 
   const subtotal = useMemo(
     () => cart.reduce((s, l) => s + l.qty * l.product.price, 0),
@@ -48,7 +66,34 @@ const Checkout = () => {
 
   const isEmpty = cart.length === 0;
 
+  const validateForm = () => {
+    setValidationError("");
+
+    if (!nama.trim()) {
+      setValidationError("nama harus diisi");
+      return false;
+    }
+    if (!email.trim()) {
+      setValidationError("Email harus diisi");
+      return false;
+    }
+    if (!telepon.trim()) {
+      setValidationError("Nomor HP harus diisi");
+      return false;
+    }
+    if (metode === "delivery" && !alamat.trim()) {
+      setValidationError("Alamat harus diisi");
+      return false;
+    }
+
+    return true;
+  };
   const handleConfirmEmail = () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
     const to = "oikoumene.ut@gmail.com";
     const subject = "Order Produk POUT";
 
@@ -71,11 +116,15 @@ Nama: ${nama}
 Email: ${email}
 Telepon: ${telepon}
 Metode: ${metode === "pickup" ? "Ambil di Sekretariat" : "Antar ke Alamat"}
-${metode === "delivery" ? `Alamat: ${alamat}` : "" }
+${metode === "delivery" ? `Alamat: ${alamat}` : ""}
 Catatan: ${catatan}
 
 Terima kasih.
 `;
+
+    navigate("/product", {
+      state: { message: "Order placed successfully!" },
+    });
 
     const encSubject = encodeURIComponent(subject);
     const encBody = encodeURIComponent(text.trim());
@@ -138,32 +187,38 @@ Terima kasih.
               <h2 className="text-xl font-bold">Data Pemesan</h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm mb-1">Nama Lengkap</label>
+                  <label className="block text-sm mb-1 font-medium">Nama *</label>
                   <input
                     className="w-full border rounded-lg px-3 py-2"
                     value={nama}
                     onChange={(e) => setNama(e.target.value)}
+                    readOnly
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1">Email</label>
+                  <label className="block text-sm mb-1 font-medium">Email *</label>
                   <input
                     type="email"
                     className="w-full border rounded-lg px-3 py-2"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    readOnly
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1">No. Telepon</label>
+                  <label className="block text-sm mb-1 font-medium">Nomor HP *</label>
                   <input
                     className="w-full border rounded-lg px-3 py-2"
                     value={telepon}
-                    onChange={(e) => setTelepon(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      setTelepon(val);
+                    }}
+                    placeholder="Enter phone number (numbers only)"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1">Metode</label>
+                  <label className="block text-sm mb-1 font-medium">Metode *</label>
                   <select
                     className="w-full border rounded-lg px-3 py-2"
                     value={metode}
@@ -172,32 +227,45 @@ Terima kasih.
                     }
                   >
                     <option value="pickup">Ambil di Sekretariat</option>
-                    <option value="delivery">Antar ke Alamat (+ Rp 10.000)</option>
+                    <option value="delivery">Dikirim (+ Rp 10.000)</option>
                   </select>
                 </div>
               </div>
 
               {metode === "delivery" && (
                 <div>
-                  <label className="block text-sm mb-1">Alamat Lengkap</label>
+                  <label className="block text-sm mb-1 font-medium">Alamat * </label>
                   <textarea
                     className="w-full border rounded-lg px-3 py-2"
-                    rows={3}
+                    rows={2}
                     value={alamat}
-                    onChange={(e) => setAlamat(e.target.value)}
+                    onChange={(e) =>
+                      setAlamat(e.target.value.slice(0, 50))
+                    }
+                    placeholder="Enter delivery address"
+                    maxLength={50}
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {alamat.length}/50
+                  </p>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm mb-1">Catatan</label>
+                <label className="block text-sm mb-1 font-medium">Notes</label>
                 <textarea
                   className="w-full border rounded-lg px-3 py-2"
-                  rows={3}
+                  rows={2}
                   placeholder="Contoh: tanpa pedas, ambil jam 13.00, dsb."
                   value={catatan}
-                  onChange={(e) => setCatatan(e.target.value)}
+                  onChange={(e) =>
+                    setCatatan(e.target.value.slice(0, 50))
+                  }
+                  maxLength={50}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  {catatan.length}/50
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -221,12 +289,19 @@ Terima kasih.
                 <span className="font-extrabold">{currency(total)}</span>
               </div>
 
+              {validationError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{validationError}</AlertDescription>
+                </Alert>
+              )}
+
               <Button
-                disabled={isEmpty}
+                disabled={isEmpty || isSubmitting}
                 onClick={handleConfirmEmail}
                 className="w-full bg-gradient-primary text-primary-foreground font-bold py-6 rounded-xl hover:opacity-90"
               >
-                Konfirmasi via Email
+                {isSubmitting ? "Processing..." : "Konfirmasi"}
               </Button>
 
               <Button
