@@ -101,8 +101,6 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Removed Remember Me and Forgot Password per design request */}
-
             <div className="flex flex-col items-center">
               <button
                 type="submit"

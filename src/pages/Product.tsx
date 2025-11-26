@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Heart, X, Trash2, Plus, Minus, AlertCircle } from "lucide-react";
+import { ShoppingCart, Heart, X, Trash2, Plus, Minus, AlertCircle, Locate } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuthHook";
