@@ -14,8 +14,8 @@ const Footer = () => {
                                 POUT
                             </span>
                         </div>
-                        <p className="text-sm text-slate-400">
-                            POUT (Persekutuan Oikumene Universitas Tarumanagara) adalah organisasi kemahasiswaan yang berfokus pada pertumbuhan rohani dan pembinaan karakter mahasiswa Kristen di lingkungan Universitas Tarumanagara.
+                        <p className="text-sm text-slate-400 mr-6 text-justify">
+                            POUT (Persekutuan Oikumene Universitas Tarumanagara) adalah UKM yang berfokus pada pertumbuhan rohani dan pembinaan karakter mahasiswa Kristen di lingkungan Universitas Tarumanagara.
                             POUT telah menjadi wadah bagi mahasiswa untuk bertumbuh dalam iman, membangun persekutuan yang solid, dan melayani sesama dengan kasih Kristus. Kami percaya bahwa setiap mahasiswa memiliki potensi luar biasa untuk menjadi berkat bagi dunia.
                         </p>
                     </div>

@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Heart, BookOpen, Target, Award, Shield, X, LucideIcon, Loader2 } from "lucide-react";
 import heroImage from "@/assets/hero-fellowship.jpg";
-import bgImage from "@/assets/activity-bible-study.jpg";
+import bgImage from "@/assets/hero-fellowship.jpg";
 import { profileCMSApi } from "@/lib/api";
 
 type IconType = 'Shield' | 'Award' | 'Target' | 'Users' | 'Heart' | 'BookOpen';
