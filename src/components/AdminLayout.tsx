@@ -1,18 +1,25 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useRef } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuthHook";
 import {
   Menu,
+  Monitor,
+  CalendarClock,
   Package,
   Truck,
   Users,
   ChevronRight,
   ChevronDown,
   LayoutDashboard,
-  Settings,
   LogOut,
   Search as SearchIcon,
   Bell,
+  BellOff,
+  BellRing,
+  FileText
 } from "lucide-react";
+import { uploadImage } from "@/supabase/storage/client";
+import { useToast } from "@/hooks/use-toast";
 
 type AdminLayoutProps = {
   title: string;
@@ -20,13 +27,79 @@ type AdminLayoutProps = {
   children: ReactNode;
 };
 
+
 const AdminLayout = ({ title, subtitle, children }: AdminLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const productsActive = location.pathname.startsWith("/admin/products");
+  const productsActive = location.pathname.startsWith("/admin/products") || location.pathname.startsWith("/admin/activities");
   const [productOpen, setProductOpen] = useState(productsActive);
+  const { logout, token, user, updateProfile } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [active, setActive] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+      setIsLoggingOut(false);
+    }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Error",
+        description: "Please select an image file",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const imageUrl = await uploadImage(file);
+
+      const result = await updateProfile({ avatarUrl: imageUrl });
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Avatar updated successfully"
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "Failed to update avatar",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload avatar",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const linkBase =
     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors";
@@ -55,48 +128,78 @@ const AdminLayout = ({ title, subtitle, children }: AdminLayoutProps) => {
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
-            <div className="hidden items-center gap-2 rounded-lg bg-white/10 px-2 py-1 md:flex">
-              <SearchIcon className="h-4 w-4 opacity-90" />
-              <input
-                className="w-48 bg-transparent text-sm placeholder-white/70 focus:outline-none"
-                placeholder="Search…"
-              />
-            </div>
 
-            <button className="rounded-md p-1 hover:bg-white/10">
-              <Bell className="h-5 w-5" />
+            <button
+              onClick={() => setActive(!active)}
+              className="rounded-md p-1 hover:bg-white/10"
+            >
+              {active ? (
+                <Bell className="w-6 h-6" />
+              ) : (
+                <BellRing className="w-6 h-6" />
+              )}
             </button>
 
-            <div className="ml-1 flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-white/80 ring-2 ring-white/40" />
+            <button
+              onClick={handleAvatarClick}
+              disabled={isUploading}
+              className="ml-1 flex items-center gap-2 rounded-lg hover:bg-white/10 p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Click to change avatar"
+            >
+              <div className="h-6 w-6 rounded-full bg-white/80 ring-2 ring-white/40 overflow-hidden flex-shrink-0">
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-white/50" />
+                )}
+              </div>
               <span className="hidden text-sm font-semibold md:inline">
-                Admin
+                {user?.name || 'Admin'}
               </span>
-            </div>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              className="hidden"
+              disabled={isUploading}
+            />
           </div>
         </div>
       </header>
 
       {/* LAYOUT */}
-      <div className="mx-auto grid max-w-[1400px] grid-cols-1 md:grid-cols-[260px_1fr]">
+      <div className="flex">
         {/* SIDEBAR */}
         <aside
-          className={`${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-          } fixed inset-y-12 z-30 w-64 bg-slate-900 text-slate-100 transition-transform md:static`}
+          className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            } fixed inset-y-12 left-0 z-30 w-64 bg-slate-900 text-slate-100 transition-transform md:static md:translate-x-0 md:inset-auto`}
         >
           <div className="h-full overflow-y-auto">
             <div className="flex items-center gap-3 border-b border-white/10 px-4 py-4">
-              <div className="h-10 w-10 rounded-full bg-slate-700 ring-2 ring-white/10" />
+
+              <button
+                onClick={handleAvatarClick}
+                disabled={isUploading}
+                className="h-10 w-10 rounded-full bg-slate-700 ring-2 ring-white/10 overflow-hidden flex-shrink-0 hover:ring-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Click to change avatar"
+              >
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-slate-600" />
+                )}
+              </button>
               <div>
-                <p className="font-semibold leading-tight">Admin</p>
+                <p className="font-semibold leading-tight">{user?.name || 'Admin'}</p>
                 <p className="text-xs text-emerald-400">● Online</p>
               </div>
             </div>
 
             <nav className="px-2 py-4">
               <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                Main Navigation
+                Navigation
               </p>
 
               <NavLink
@@ -120,63 +223,36 @@ const AdminLayout = ({ title, subtitle, children }: AdminLayoutProps) => {
                 Suppliers
               </NavLink>
 
-              {/* PRODUCTS MENU */}
-              <div className="mt-1">
-                <button
-                  type="button"
-                  onClick={() => setProductOpen((v) => !v)}
-                  className={`${linkBase} w-full justify-between text-left ${
-                    productsActive ? linkActive : linkInactive
-                  }`}
-                >
-                  <span className="flex items-center gap-3">
-                    <Package className="h-4 w-4" />
-                    Products
-                  </span>
-
-                  {productOpen ? (
-                    <ChevronDown className="h-4 w-4 opacity-70" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 opacity-70" />
-                  )}
-                </button>
-
-                {productOpen && (
-                  <div className="ml-10 mt-1 space-y-1">
-                    <NavLink
-                      to="/admin/products"
-                      className={({ isActive }) =>
-                        `block rounded-md px-3 py-1.5 text-sm ${
-                          isActive
-                            ? "bg-slate-800/80 text-white"
-                            : "text-slate-200 hover:bg-slate-800/60"
-                        }`
-                      }
-                      end
-                    >
-                      General
-                    </NavLink>
-
-                    <NavLink
-                      to="/admin/products/inventory"
-                      className={({ isActive }) =>
-                        `block rounded-md px-3 py-1.5 text-sm ${
-                          isActive
-                            ? "bg-slate-800/80 text-white"
-                            : "text-slate-200 hover:bg-slate-800/60"
-                        }`
-                      }
-                    >
-                      Inventory
-                    </NavLink>
-                  </div>
-                )}
-              </div>
-
-              <p className="mt-6 px-2 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              <NavLink
+                to="/admin/products"
+                className={({ isActive }) =>
+                  `${linkBase} mt-1 ${isActive ? linkActive : linkInactive}`
+                }
+              >
+                <Package className="h-4 w-4" />
+                Products
+              </NavLink>
+              <NavLink
+                to="/admin/activities"
+                className={({ isActive }) =>
+                  `${linkBase} mt-1 ${isActive ? linkActive : linkInactive}`
+                }
+              >
+                <CalendarClock className="h-4 w-4" />
+                Activities
+              </NavLink>
+              <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 mt-3">
                 Settings
               </p>
-
+              <NavLink
+                to="/admin/profile-cms"
+                className={({ isActive }) =>
+                  `${linkBase} mt-1 ${isActive ? linkActive : linkInactive}`
+                }
+              >
+                <FileText className="h-4 w-4" />
+                Divisions & Departments
+              </NavLink>
               <NavLink
                 to="/admin/users"
                 className={({ isActive }) =>
@@ -184,22 +260,23 @@ const AdminLayout = ({ title, subtitle, children }: AdminLayoutProps) => {
                 }
               >
                 <Users className="h-4 w-4" />
-                Users
+                Users & Admins
               </NavLink>
-
-              <button
-                type="button"
-                onClick={() => navigate("/")}
-                className={`${linkBase} mt-6 text-slate-200 hover:bg-slate-800/80 w-full`}
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </button>
+              <div className="w-full flex justify-left items-center mt-1" >
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="w-fit mt-6 flex items-center justify-left gap-2 hover:bg-red-30 text-gray-300 font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <LogOut className="h-5 w-5" />
+                  {isLoggingOut ? 'Logging out...' : 'Logout'}
+                </button>
+              </div>
             </nav>
           </div>
         </aside>
 
-        <main className="min-h-[calc(100vh-3rem)] bg-slate-50 p-4 md:p-6">
+        <main className="flex-1 min-h-[calc(100vh-3rem)] bg-slate-50 p-4 md:p-6">
           <div className="mb-4">
             <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
             {subtitle && (

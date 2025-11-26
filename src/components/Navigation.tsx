@@ -1,10 +1,18 @@
-import { NavLink } from "@/components/NavLink";
+import { useState } from "react";
+import { NavLink } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuthHook";
 import { Mail, Instagram } from "lucide-react";
+import MiniCard from "./MiniCard";
+import type { User } from "@/contexts/AuthContext";
 
 type UserMini = { name: string; avatarUrl?: string | null };
 type Props = { user?: UserMini | null };
 
-const Navigation = ({ user = null }: Props) => {
+const Navigation = ({ user: _user = null }: Props) => {
+  const { user: authUser } = useAuth();
+  const [miniCardOpen, setMiniCardOpen] = useState(false);
+  const user = authUser || _user;
+
   const navItems = [
     { name: "HOME", path: "/" },
     { name: "PROFIL", path: "/profile" },
@@ -22,33 +30,50 @@ const Navigation = ({ user = null }: Props) => {
               <NavLink
                 key={item.path}
                 to={item.path}
-                className="text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium text-sm"
-                activeClassName="text-primary-foreground border-b-2 border-secondary"
+                className={({ isActive }) =>
+                  `text-primary-foreground/80 hover:text-primary-foreground transition-colors font-medium text-sm ${isActive ? "text-primary-foreground border-b-2 border-secondary" : ""
+                  }`
+                }
               >
                 {item.name}
               </NavLink>
             ))}
           </div>
 
-          <div className="flex items-center space-x-4">
-            {user ? (
-              <NavLink
-                to="/profileuser"
-                className="flex items-center gap-2 text-primary-foreground/90 hover:text-primary-foreground font-semibold"
-                activeClassName="text-primary-foreground"
-              >
-                {user.avatarUrl ? (
-                  <img src={user.avatarUrl} className="h-6 w-6 rounded-full object-cover" />
-                ) : (
-                  <span className="h-6 w-6 rounded-full bg-white/50 inline-block" />
+          <div className="flex items-center space-x-4 relative">
+            {user && user.name ? (
+              <div className="relative">
+                <button
+                  onClick={() => setMiniCardOpen(!miniCardOpen)}
+                  className="flex items-center gap-2 text-primary-foreground/90 hover:text-primary-foreground font-semibold transition-colors"
+                >
+                  {user.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.name}
+                      className="h-8 w-8 rounded-full object-cover border-2 border-primary-foreground/30 hover:border-primary-foreground"
+                    />
+                  ) : (
+                    <span className="h-8 w-8 rounded-full bg-white/50 inline-flex items-center justify-center text-primary text-xs font-bold">
+                      {user.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="text-sm">{user.name}</span>
+                </button>
+
+                {miniCardOpen && (
+                  <div className="absolute top-full right-0 mt-2">
+                    <MiniCard user={authUser} onClose={() => setMiniCardOpen(false)} />
+                  </div>
                 )}
-                {user.name}
-              </NavLink>
+              </div>
             ) : (
               <NavLink
                 to="/login"
-                className="text-primary-foreground/80 hover:text-primary-foreground underline underline-offset-4 tracking-wide text-sm font-semibold"
-                activeClassName="text-primary-foreground"
+                className={({ isActive }) =>
+                  `text-primary-foreground/80 hover:text-primary-foreground underline underline-offset-4 tracking-wide text-sm font-semibold transition-colors ${isActive ? "text-primary-foreground" : ""
+                  }`
+                }
               >
                 Login
               </NavLink>
@@ -74,6 +99,13 @@ const Navigation = ({ user = null }: Props) => {
           </div>
         </div>
       </div>
+
+      {miniCardOpen && (
+        <div
+          className="fixed inset-0 z-10"
+          onClick={() => setMiniCardOpen(false)}
+        />
+      )}
     </nav>
   );
 };

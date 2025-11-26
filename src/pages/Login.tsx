@@ -1,18 +1,46 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuthHook";
 import loginIllustration from "@/assets/login-illustration.png";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
+
   const [showPass, setShowPass] = useState(false);
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/");
+    setError("");
+
+    if (!email || !password) {
+      setError("Email dan password wajib diisi");
+      return;
+    }
+
+    setLoading(true);
+    const result = await login(email, password);
+    setLoading(false);
+
+    if (result.success) {
+      // Redirect based on role
+      setTimeout(() => {
+        const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
+        if (user.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
+      }, 300);
+    } else {
+      setError(result.message || "Login Gagal. Silakan coba lagi.");
+    }
   };
 
   return (
@@ -26,15 +54,24 @@ const Login = () => {
 
           <h3 className="text-xl font-bold text-[#3A66CC] mb-6">LOGIN</h3>
 
+          {error && (
+            <div className="mb-6 flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg p-3">
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
           <form onSubmit={onSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Username</label>
+              <label className="block text-sm text-gray-600 mb-1">Email</label>
               <div className="relative">
                 <input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-transparent border-b border-gray-300 focus:border-[#3A66CC] outline-none py-2 pr-8"
-                  placeholder="yourname"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  className="w-full bg-transparent border-b border-gray-300 focus:border-[#3A66CC] outline-none py-2 pr-8 disabled:bg-gray-50"
+                  placeholder="user@email.com"
                 />
                 <User className="absolute right-0 top-2.5 h-4 w-4 text-gray-400" />
               </div>
@@ -47,13 +84,15 @@ const Login = () => {
                   type={showPass ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-transparent border-b border-gray-300 focus:border-[#3A66CC] outline-none py-2 pr-8"
+                  disabled={loading}
+                  className="w-full bg-transparent border-b border-gray-300 focus:border-[#3A66CC] outline-none py-2 pr-8 disabled:bg-gray-50"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass((v) => !v)}
-                  className="absolute right-6 top-2.5 text-gray-400 hover:text-gray-600"
+                  disabled={loading}
+                  className="absolute right-6 top-2.5 text-gray-400 hover:text-gray-600 disabled:opacity-50"
                   aria-label="toggle password visibility"
                 >
                   {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -62,41 +101,27 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="flex items-start justify-between text-xs text-gray-500">
-              <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                  className="rounded border-gray-300"
-                />
-                Remember Me
-              </label>
+            {/* Removed Remember Me and Forgot Password per design request */}
 
-              <div className="flex flex-col items-end leading-4">
-                <button
-                  type="button"
-                  onClick={() => navigate("/forgot-password")}
-                  className="hover:underline"
-                >
-                  Forgot Password
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate("/register")}
-                  className="mt-1 text-[#3A66CC] font-semibold hover:underline"
-                >
-                  Register Now
-                </button>
-              </div>
-            </div>
-
-            <button
+            <div className="flex flex-col items-center">
+              <button
                 type="submit"
-                className="w-64 md:w-72 mt-3 rounded-full bg-[#CFE0FF] text-[#3A66CC] font-semibold text-lg md:text-xl tracking-wide py-3.5 md:py-4 shadow-xl hover:shadow-2xl hover:brightness-105 active:scale-[0.98] transition"
-                >
-                    LOGIN
-            </button>
+                disabled={loading}
+                className="w-64 md:w-72 mt-3 rounded-full bg-[#CFE0FF] text-[#3A66CC] font-semibold text-lg md:text-xl tracking-wide py-3.5 md:py-4 shadow-xl hover:shadow-2xl hover:brightness-105 active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Logging in..." : "LOGIN"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate("/register")}
+                disabled={loading}
+                className="mt-4 text-gray-600 disabled:opacity-50"
+              >
+                Belum punya akun? <span className="font-semibold hover:underline text-[#3A66CC]">Register disini</span>
+              </button>
+
+            </div>
           </form>
         </div>
 

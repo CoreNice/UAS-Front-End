@@ -1,27 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Heart, BookOpen, Target, Award, Shield, X, LucideIcon } from "lucide-react";
+import { Users, Heart, BookOpen, Target, Award, Shield, X, LucideIcon, Loader2 } from "lucide-react";
 import heroImage from "@/assets/hero-fellowship.jpg";
+import bgImage from "@/assets/activity-bible-study.jpg";
+import { profileCMSApi } from "@/lib/api";
+
+type IconType = 'Shield' | 'Award' | 'Target' | 'Users' | 'Heart' | 'BookOpen';
 
 type Division = {
+  _id?: string;
   name: string;
   description: string;
   longDescription: string;
-  icon: LucideIcon;
+  icon: IconType;
   color: string;
   image: string;
+  order?: number;
+};
+
+const iconMap: Record<IconType, LucideIcon> = {
+  Shield,
+  Award,
+  Target,
+  Users,
+  Heart,
+  BookOpen,
 };
 
 const Profile = () => {
-  const divisions: Division[] = [
+  const defaultDivisions: Division[] = [
     {
       name: "BPHI",
       description:
         "Badan Pengurus Harian Inti - Tim inti yang mengelola operasional POUT dengan dedikasi penuh",
       longDescription:
         "BPHI merupakan inti kepemimpinan dalam POUT/UKM Kristen UNTAR yang bertanggung jawab atas arah strategis, koordinasi kegiatan, dan pengambilan keputusan organisasi. Sebagai motor penggerak utama, BPHI terdiri dari individu-individu yang memiliki komitmen tinggi terhadap visi dan misi POUT, menjadi teladan dalam pelayanan, integritas, dan kolaborasi. Mereka memastikan sinergi antar divisi dan menjaga semangat kekeluargaan dalam komunitas.",
-      icon: Shield,
+      icon: 'Shield',
       color: "from-blue-600 to-blue-400",
       image: heroImage,
     },
@@ -31,7 +46,7 @@ const Profile = () => {
         "Membimbing dan memberikan arahan spiritual kepada anggota dengan penuh kasih dan hikmat",
       longDescription:
         "Badan Pembina berperan memberi nasihat, arahan rohani, dan penguatan nilai-nilai pelayanan agar setiap program tetap selaras dengan kebenaran.",
-      icon: Award,
+      icon: 'Award',
       color: "from-purple-600 to-purple-400",
       image: heroImage,
     },
@@ -41,7 +56,7 @@ const Profile = () => {
         "Merencanakan dan mengkoordinasi seluruh kegiatan POUT dengan kreatif dan terorganisir",
       longDescription:
         "Divisi Acara bertanggung jawab pada perencanaan, timeline, logistik, dan eksekusi acara agar berdampak dan berjalan tertib.",
-      icon: Target,
+      icon: 'Target',
       color: "from-cyan-600 to-cyan-400",
       image: heroImage,
     },
@@ -51,7 +66,7 @@ const Profile = () => {
         "Fasilitator pertumbuhan rohani dalam kelompok kecil yang intim dan mendalam",
       longDescription:
         "Kelompok Kecil menolong anggota bertumbuh melalui persekutuan, pendampingan, dan pembelajaran Alkitab secara konsisten.",
-      icon: Users,
+      icon: 'Users',
       color: "from-green-600 to-green-400",
       image: heroImage,
     },
@@ -61,7 +76,7 @@ const Profile = () => {
         "Memimpin ibadah melalui musik dan penyembahan yang penuh semangat dan ketulusan",
       longDescription:
         "Tim ini melayani melalui musik, vokal, dan tata ibadah sehingga jemaat dapat memuji Tuhan dengan sukacita dan khidmat.",
-      icon: Heart,
+      icon: 'Heart',
       color: "from-pink-600 to-pink-400",
       image: heroImage,
     },
@@ -71,7 +86,7 @@ const Profile = () => {
         "Tim khusus yang melayani dalam doa syafaat dan perhatian pastoral kepada setiap anggota",
       longDescription:
         "Tim Doa & Pemerhati setia mendoakan kebutuhan komunitas dan memperhatikan anggota yang memerlukan dukungan.",
-      icon: Heart,
+      icon: 'Heart',
       color: "from-orange-600 to-orange-400",
       image: heroImage,
     },
@@ -81,13 +96,54 @@ const Profile = () => {
         "Pendampingan Doktrinal - Memastikan ajaran sesuai dengan kebenaran firman Tuhan",
       longDescription:
         "Padok memastikan pengajaran dalam kegiatan POUT tetap sehat secara doktrinal, alkitabiah, dan membangun iman.",
-      icon: BookOpen,
+      icon: 'BookOpen',
       color: "from-indigo-600 to-indigo-400",
       image: heroImage,
     },
   ];
 
+  const [divisions, setDivisions] = useState<Division[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [active, setActive] = useState<Division | null>(null);
+
+  useEffect(() => {
+    const fetch = async () => {
+      await fetchDivisions();
+    };
+    fetch();
+
+    let mounted = true;
+    return () => { mounted = false; };
+  }, []);
+
+
+  const fetchDivisions = async () => {
+    try {
+      setIsLoading(true);
+      const response = await profileCMSApi.getAll();
+
+      if (response.success && response.data && Array.isArray(response.data)) {
+        const mappedDivisions: Division[] = (response.data as Record<string, unknown>[]).map(div => ({
+          _id: div._id as string,
+          name: div.name as string,
+          description: div.description as string,
+          longDescription: div.longDescription as string,
+          icon: div.icon as IconType,
+          color: div.color as string,
+          image: (div.image as string) || heroImage,
+          order: div.order as number,
+        }));
+        setDivisions(mappedDivisions.length > 0 ? mappedDivisions : defaultDivisions);
+      } else {
+        setDivisions(defaultDivisions);
+      }
+    } catch (error) {
+      console.error('Failed to fetch divisions:', error);
+      setDivisions(defaultDivisions);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 bg-gradient-to-b from-background via-muted/20 to-background">
@@ -96,7 +152,7 @@ const Profile = () => {
           <div
             className="h-96 bg-cover bg-center relative"
             style={{
-              backgroundImage: `linear-gradient(135deg, rgba(66, 135, 245, 0.9), rgba(88, 166, 255, 0.85)), url(${heroImage})`,
+              backgroundImage: `linear-gradient(135deg, rgba(66, 135, 245, 0.9), rgba(88, 166, 255, 0.85)), url(${bgImage})`,
             }}
           >
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
@@ -154,32 +210,41 @@ const Profile = () => {
             <div className="h-1.5 w-40 bg-gradient-primary rounded-full mx-auto" />
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8">
-            {divisions.map((division, index) => (
-              <Card
-                key={division.name}
-                onClick={() => setActive(division)}
-                className="group cursor-pointer shadow-card hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 overflow-hidden animate-slide-in-left"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <CardContent className="p-8">
-                  <div className="flex items-start space-x-6">
-                    <div
-                      className={`flex-shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br ${division.color} flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-500`}
-                    >
-                      <division.icon className="h-10 w-10 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-2xl font-bold mb-3 text-primary group-hover:text-accent transition-colors">
-                        {division.name}
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed">{division.description}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            </div>
+          ) : (
+            <div className="grid lg:grid-cols-2 gap-8">
+              {divisions.map((division, index) => {
+                const IconComponent = iconMap[division.icon];
+                return (
+                  <Card
+                    key={division.name}
+                    onClick={() => setActive(division)}
+                    className="group cursor-pointer shadow-card hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 overflow-hidden animate-slide-in-left"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <CardContent className="p-8">
+                      <div className="flex items-start space-x-6">
+                        <div
+                          className={`flex-shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br ${division.color} flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-500`}
+                        >
+                          {IconComponent && <IconComponent className="h-10 w-10 text-white" />}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-2xl font-bold mb-3 text-primary group-hover:text-accent transition-colors">
+                            {division.name}
+                          </h3>
+                          <p className="text-muted-foreground leading-relaxed">{division.description}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <section className="mt-20">
@@ -204,6 +269,8 @@ const Profile = () => {
         </section>
       </div>
 
+
+      {/* Detail Card */}
       {active && (
         <>
           <div
