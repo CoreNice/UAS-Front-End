@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Users, Heart, BookOpen, Target } from "lucide-react";
-import heroImage from "@/assets/hero-fellowship.jpg";
+import heroImage from "@/assets/homebg.jpg";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -10,15 +10,15 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       <section className="relative pt-32 pb-20 px-4 overflow-hidden">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ 
+          style={{
             backgroundImage: `linear-gradient(135deg, rgba(66, 135, 245, 0.85), rgba(88, 166, 255, 0.75)), url(${heroImage})`,
           }}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-primary/20 to-transparent"></div>
         </div>
-        
+
         <div className="container mx-auto text-center relative z-10">
           <h1 className="text-6xl md:text-8xl font-extrabold text-primary-foreground mb-6 animate-fade-in tracking-tight drop-shadow-lg">
             HI!! WE ARE <span className="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg inline-block transform hover:scale-105 transition-transform">POUT</span>
@@ -35,7 +35,7 @@ const Home = () => {
             </p>
             <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-6 mt-6 border-2 border-primary-foreground/20">
               <p className="text-xl text-primary-foreground italic font-medium">
-                Markus 10:45 <br/>
+                Markus 10:45 <br />
                 "Karena Anak Manusia juga datang bukan untuk dilayani, melainkan untuk melayani..."
               </p>
             </div>
@@ -65,9 +65,9 @@ const Home = () => {
                   Selamat Datang di POUT UNTAR
                 </h2>
                 <p className="text-xl text-muted-foreground text-center leading-relaxed">
-                  POUT UNTAR adalah komunitas keagamaan di Universitas Tarumanagara 
-                  yang berdedikasi untuk pertumbuhan rohani mahasiswa. Kami percaya bahwa 
-                  setiap individu memiliki potensi luar biasa untuk bertumbuh dalam iman 
+                  POUT UNTAR adalah komunitas keagamaan di Universitas Tarumanagara
+                  yang berdedikasi untuk pertumbuhan rohani mahasiswa. Kami percaya bahwa
+                  setiap individu memiliki potensi luar biasa untuk bertumbuh dalam iman
                   dan kasih, serta berkontribusi positif bagi sesama.
                 </p>
               </CardContent>
@@ -91,8 +91,8 @@ const Home = () => {
               { icon: BookOpen, title: "Pembelajaran", description: "Terus bertumbuh dalam pengetahuan firman", color: "from-green-500 to-emerald-500", delay: "0.2s" },
               { icon: Target, title: "Pelayanan", description: "Melayani dengan hati yang tulus dan rendah hati", color: "from-yellow-500 to-orange-500", delay: "0.3s" },
             ].map((value, index) => (
-              <Card 
-                key={index} 
+              <Card
+                key={index}
                 className="group shadow-card hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 border-0 overflow-hidden animate-scale-in"
                 style={{ animationDelay: value.delay }}
               >
